@@ -6,7 +6,8 @@
     "desc": "Why this bill changes everything for middle-class voters. #politics",
     "color": "#1e293b",
     "likes": 14200,
-    "comments": 312
+    "comments": 312,
+    "biased": true
   },
   {
     "id": 2,
@@ -15,7 +16,8 @@
     "desc": "Comparing solar subsidies vs. natural gas investments. #energy",
     "color": "#1f2937",
     "likes": 8350,
-    "comments": 128
+    "comments": 128,
+    "biased": true
   },
   {
     "id": 3,
@@ -24,6 +26,7 @@
     "desc": "A 60-second refresher on Senate cloture votes. #civics",
     "color": "#172554",
     "likes": 21900,
-    "comments": 540
+    "comments": 540,
+    "biased": false
   }
 ]

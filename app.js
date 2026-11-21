@@ -8,6 +8,17 @@ async function init() {
     <div class="slide">
       <div class="player-wrap">
         <section class="video-card" style="background:${p.color}">
+          ${p.biased ? `
+            <button class="bias-indicator" title="Potential bias detected" aria-label="Potential bias detected">
+              <svg class="warn-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span class="bias-label">Bias Alert</span>
+              <span class="bias-chevron">›</span>
+            </button>
+          ` : ""}
           <div class="play-status">▶</div>
           <div class="video-meta">
             <div class="handle">${p.handle}</div>
@@ -61,10 +72,33 @@ async function init() {
       </div>
     </div>
   `).join("");
+
+  // Trigger attention animation each time a biased post scrolls into view
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const badge = entry.target.querySelector(".bias-indicator");
+      if (!badge) return;
+      if (entry.isIntersecting) {
+        badge.classList.remove("compact");
+        badge.classList.add("attention");
+        clearTimeout(badge._timer);
+        badge._timer = setTimeout(() => badge.classList.add("compact"), 2800);
+      } else {
+        badge.classList.remove("attention", "compact");
+      }
+    });
+  }, { root: feed, threshold: 0.7 });
+
+  document.querySelectorAll(".slide").forEach((slide) => observer.observe(slide));
 }
 
-// Click handling for pause/play, like, and save
+// Click handling for bias indicator, pause/play, like, and save
 feed.addEventListener("click", (e) => {
+  if (e.target.closest(".bias-indicator")) {
+    // Hook for bias info panel later
+    return;
+  }
+
   const card = e.target.closest(".video-card");
   if (card) card.classList.toggle("paused");
 

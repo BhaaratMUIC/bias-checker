@@ -8,9 +8,9 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
-.feed::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+.feed::-webkit-scrollbar { display: none; }
 
 .slide {
   width: 100%;
@@ -97,3 +97,77 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
   transition: background 0.15s;
 }
 .nav-btn:hover { background: rgba(255, 255, 255, 0.22); }
+
+/* Top-right expandable bias indicator */
+.bias-indicator {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 2.5px solid #ffffff;
+  background: #f59e0b;
+  color: #121212;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  transition: padding 0.3s ease, gap 0.3s ease, transform 0.15s, background 0.15s;
+}
+
+.bias-indicator .bias-label,
+.bias-indicator .bias-chevron {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100px;
+  transition: max-width 0.3s ease, opacity 0.25s ease;
+}
+
+.bias-indicator .bias-chevron { font-size: 20px; line-height: 1; }
+
+/* Compact circular state after 2.8s */
+.bias-indicator.compact {
+  padding: 0 11px;
+  gap: 0;
+}
+.bias-indicator.compact .bias-label,
+.bias-indicator.compact .bias-chevron {
+  max-width: 0;
+  opacity: 0;
+}
+
+/* Re-expand on hover */
+.bias-indicator:hover {
+  background: #fbbf24;
+  padding: 0 14px;
+  gap: 8px;
+  animation: none;
+}
+.bias-indicator:hover .bias-label,
+.bias-indicator:hover .bias-chevron {
+  max-width: 100px;
+  opacity: 1;
+}
+
+/* Scroll-triggered pop + wiggle, followed by pulse */
+.bias-indicator.attention {
+  animation: bias-pop 0.55s ease-out, bias-pulse 1.8s 0.6s infinite ease-out;
+}
+
+@keyframes bias-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  50%  { transform: scale(1.12) rotate(-5deg); opacity: 1; }
+  75%  { transform: scale(1.05) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes bias-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.85), 0 4px 16px rgba(0, 0, 0, 0.6); }
+  70%  { box-shadow: 0 0 0 16px rgba(245, 158, 11, 0), 0 4px 16px rgba(0, 0, 0, 0.6); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 4px 16px rgba(0, 0, 0, 0.6); }
+}
