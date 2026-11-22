@@ -1,9 +1,19 @@
 const feed = document.getElementById("feed");
 const drawer = document.getElementById("infoDrawer");
 const screenSummary = document.getElementById("screenSummary");
+const screenEdit = document.getElementById("screenEdit");
 const screenSources = document.getElementById("screenSources");
 
+const editBiasSummary = document.getElementById("editBiasSummary");
+const editPosterNote = document.getElementById("editPosterNote");
+const editPosterHandle = document.getElementById("editPosterHandle");
+const editHeaderTitle = document.getElementById("editHeaderTitle");
+const editConfirmNotice = document.getElementById("editConfirmNotice");
+const finishEditBtn = document.getElementById("finishEditBtn");
+const saveActions = document.getElementById("saveActions");
+
 let posts = [];
+let currentPost = null;
 
 async function init() {
   const res = await fetch("posts.json");
@@ -78,7 +88,6 @@ async function init() {
     </div>
   `).join("");
 
-  // Trigger attention animation & keep open drawer synced when scrolling
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       const badge = entry.target.querySelector(".bias-indicator");
@@ -103,10 +112,17 @@ async function init() {
   document.querySelectorAll(".slide").forEach((slide) => observer.observe(slide));
 }
 
-// Open Task 2 side drawer on Screen 1
+function showScreen(target) {
+  screenSummary.classList.add("hidden");
+  screenEdit.classList.add("hidden");
+  screenSources.classList.add("hidden");
+  target.classList.remove("hidden");
+}
+
 function openBiasInfo(postId) {
   const post = posts.find((p) => p.id === Number(postId));
   if (!post) return;
+  currentPost = post;
 
   document.getElementById("biasSummaryText").textContent = post.biasSummary;
   document.getElementById("posterHandle").textContent = post.handle;
@@ -122,30 +138,57 @@ function openBiasInfo(postId) {
     </a>
   `).join("");
 
-  screenSummary.classList.remove("hidden");
-  screenSources.classList.add("hidden");
+  drawer.classList.remove("editing");
+  showScreen(screenSummary);
   document.body.classList.add("drawer-open");
   drawer.setAttribute("aria-hidden", "false");
 }
 
+function enterEditMode() {
+  if (!currentPost) return;
+  editBiasSummary.value = currentPost.biasSummary;
+  editPosterNote.value = currentPost.posterNote;
+  editPosterHandle.textContent = currentPost.handle;
+  setEditState(false);
+  drawer.classList.add("editing");
+  showScreen(screenEdit);
+}
+
+function setEditState(confirming) {
+  editBiasSummary.disabled = confirming;
+  editPosterNote.disabled = confirming;
+  editHeaderTitle.textContent = confirming ? "Confirm Changes" : "Edit Information";
+  editConfirmNotice.classList.toggle("hidden", !confirming);
+  finishEditBtn.classList.toggle("hidden", confirming);
+  saveActions.classList.toggle("hidden", !confirming);
+}
+
 function closeDrawer() {
+  drawer.classList.remove("editing");
   document.body.classList.remove("drawer-open");
   drawer.setAttribute("aria-hidden", "true");
 }
 
-// Drawer screen transitions
-document.getElementById("moreInfoBtn").onclick = () => {
-  screenSummary.classList.add("hidden");
-  screenSources.classList.remove("hidden");
+document.getElementById("moreInfoBtn").onclick = () => showScreen(screenSources);
+document.getElementById("backToSummary").onclick = () => showScreen(screenSummary);
+document.getElementById("editBtn").onclick = enterEditMode;
+document.getElementById("cancelEditBtn").onclick = () => {
+  drawer.classList.remove("editing");
+  showScreen(screenSummary);
 };
-document.getElementById("backToSummary").onclick = () => {
-  screenSources.classList.add("hidden");
-  screenSummary.classList.remove("hidden");
+finishEditBtn.onclick = () => setEditState(true);
+document.getElementById("keepEditingBtn").onclick = () => setEditState(false);
+document.getElementById("saveChangesBtn").onclick = () => {
+  if (!currentPost) return;
+  currentPost.biasSummary = editBiasSummary.value.trim();
+  currentPost.posterNote = editPosterNote.value.trim();
+  openBiasInfo(currentPost.id);
 };
+
 document.getElementById("closeDrawer").onclick = closeDrawer;
 document.getElementById("closeDrawer2").onclick = closeDrawer;
+document.getElementById("closeDrawer3").onclick = closeDrawer;
 
-// Click handling for bias indicator, pause/play, like, and save
 feed.addEventListener("click", (e) => {
   const badge = e.target.closest(".bias-indicator");
   if (badge) {
@@ -167,13 +210,13 @@ feed.addEventListener("click", (e) => {
   if (saveBtn) saveBtn.classList.toggle("saved");
 });
 
-// Smooth scroll via buttons and keyboard arrows
 const scrollPost = (dir) => feed.scrollBy({ top: dir * window.innerHeight, behavior: "smooth" });
 document.getElementById("prevBtn").onclick = () => scrollPost(-1);
 document.getElementById("nextBtn").onclick = () => scrollPost(1);
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeDrawer();
+  if (document.activeElement && document.activeElement.tagName === "TEXTAREA") return;
   if (e.key === "ArrowUp") { e.preventDefault(); scrollPost(-1); }
   if (e.key === "ArrowDown") { e.preventDefault(); scrollPost(1); }
 });

@@ -1,7 +1,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
 body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: hidden; }
 
-/* Scroll-snap container */
 .feed {
   width: 100%;
   height: 100vh;
@@ -23,6 +22,7 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
 .player-wrap {
   height: calc(100vh - 32px);
   display: flex; align-items: flex-end; gap: 20px;
+  transition: transform 0.3s ease;
 }
 
 .video-card {
@@ -55,7 +55,6 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
 .title { font-size: 19px; margin-bottom: 6px; }
 .desc { font-size: 15px; opacity: 0.92; line-height: 1.4; }
 
-/* TikTok-style right action stack */
 .actions { display: flex; flex-direction: column; align-items: center; gap: 20px; padding-bottom: 16px; }
 
 .avatar-wrap { position: relative; margin-bottom: 8px; }
@@ -85,7 +84,6 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
 
 .action-count { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.8); }
 
-/* Pinned far-right feed navigation arrows */
 .nav-btns {
   position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
   display: flex; flex-direction: column; gap: 16px; z-index: 10;
@@ -98,7 +96,6 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
 }
 .nav-btn:hover { background: rgba(255, 255, 255, 0.22); }
 
-/* Top-right expandable bias indicator */
 .bias-indicator {
   position: absolute;
   top: 18px;
@@ -130,7 +127,6 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
 
 .bias-indicator .bias-chevron { font-size: 20px; line-height: 1; }
 
-/* Compact circular state after 2.8s */
 .bias-indicator.compact {
   padding: 0 11px;
   gap: 0;
@@ -141,7 +137,6 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
   opacity: 0;
 }
 
-/* Re-expand on hover */
 .bias-indicator:hover {
   background: #fbbf24;
   padding: 0 14px;
@@ -154,7 +149,6 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
   opacity: 1;
 }
 
-/* Scroll-triggered pop + wiggle, followed by pulse */
 .bias-indicator.attention {
   animation: bias-pop 0.55s ease-out, bias-pulse 1.8s 0.6s infinite ease-out;
 }
@@ -174,15 +168,10 @@ body { background: #121212; color: #fff; width: 100vw; height: 100vh; overflow: 
 
 .hidden { display: none !important; }
 
-/* Smoothly shift the video + actions left to center the wider pair */
-.player-wrap {
-  transition: transform 0.3s ease;
-}
 body.drawer-open .player-wrap {
   transform: translateX(-242px);
 }
 
-/* Task 2: Wider 460px card docked directly beside the video */
 .info-drawer {
   position: fixed;
   top: 16px;
@@ -199,7 +188,12 @@ body.drawer-open .player-wrap {
   opacity: 0;
   pointer-events: none;
   transform: translateX(24px);
-  transition: opacity 0.25s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.info-drawer.editing {
+  background: #1e1b4b;
+  border-color: rgba(129, 140, 248, 0.5);
 }
 
 body.drawer-open .info-drawer {
@@ -208,7 +202,6 @@ body.drawer-open .info-drawer {
   transform: translateX(0);
 }
 
-/* Full-height flex layout: pinned header, scrollable body, pinned footer */
 .drawer-screen {
   display: flex;
   flex-direction: column;
@@ -251,7 +244,12 @@ body.drawer-open .info-drawer {
 .info-footer {
   padding: 18px 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.footer-row {
+  display: flex;
+  gap: 10px;
 }
 
 .info-block {
@@ -260,12 +258,18 @@ body.drawer-open .info-drawer {
   padding: 18px;
   margin-bottom: 16px;
 }
-.info-block h3 {
+.info-block h3,
+.edit-block label {
+  display: block;
   font-size: 13px;
   color: #f59e0b;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 700;
+}
+.edit-block label {
+  color: #a5b4fc;
 }
 .info-block p {
   font-size: 15px;
@@ -273,19 +277,68 @@ body.drawer-open .info-drawer {
   color: rgba(255, 255, 255, 0.92);
 }
 
-.primary-btn {
+.edit-block textarea {
   width: 100%;
-  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  border: 1px solid rgba(165, 180, 252, 0.35);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+.edit-block textarea:focus {
+  border-color: #818cf8;
+}
+.edit-block textarea:disabled {
+  opacity: 0.75;
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.edit-notice {
+  font-size: 14px;
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  border-radius: 10px;
+  padding: 12px 14px;
+  line-height: 1.45;
+}
+
+.primary-btn, .secondary-btn, .save-btn-action {
+  padding: 14px 16px;
   border: none;
   border-radius: 12px;
-  background: #f59e0b;
-  color: #121212;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
   transition: background 0.15s;
 }
+
+.primary-btn {
+  flex: 1;
+  width: 100%;
+  background: #f59e0b;
+  color: #121212;
+}
 .primary-btn:hover { background: #fbbf24; }
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  min-width: 110px;
+}
+.secondary-btn:hover { background: rgba(255, 255, 255, 0.22); }
+
+.save-btn-action {
+  flex: 1;
+  background: #22c55e;
+  color: #052e16;
+}
+.save-btn-action:hover { background: #4ade80; }
 
 .sources-intro {
   font-size: 15px;
