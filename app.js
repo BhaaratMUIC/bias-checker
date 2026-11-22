@@ -6,14 +6,67 @@ const screenSources = document.getElementById("screenSources");
 
 const editBiasSummary = document.getElementById("editBiasSummary");
 const editPosterNote = document.getElementById("editPosterNote");
+const diffBiasSummary = document.getElementById("diffBiasSummary");
+const diffPosterNote = document.getElementById("diffPosterNote");
 const editPosterHandle = document.getElementById("editPosterHandle");
 const editHeaderTitle = document.getElementById("editHeaderTitle");
 const editConfirmNotice = document.getElementById("editConfirmNotice");
-const finishEditBtn = document.getElementById("finishEditBtn");
+const editActions = document.getElementById("editActions");
 const saveActions = document.getElementById("saveActions");
 
 let posts = [];
 let currentPost = null;
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function buildDiffHtml(oldText, newText) {
+  const a = oldText.trim().split(/\s+/).filter(Boolean);
+  const b = newText.trim().split(/\s+/).filter(Boolean);
+  const m = a.length;
+  const n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < m && j < n) {
+    if (a[i] === b[j]) {
+      out.push(escapeHtml(a[i]));
+      i++;
+      j++;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      out.push(`<del class="diff-del">${escapeHtml(a[i])}</del>`);
+      i++;
+    } else {
+      out.push(`<ins class="diff-add">${escapeHtml(b[j])}</ins>`);
+      j++;
+    }
+  }
+  while (i < m) out.push(`<del class="diff-del">${escapeHtml(a[i++])}</del>`);
+  while (j < n) out.push(`<ins class="diff-add">${escapeHtml(b[j++])}</ins>`);
+
+  return out.join(" ");
+}
+
+function updateDiffPreviews(forceShow = false) {
+  if (!currentPost) return;
+
+  const biasChanged = editBiasSummary.value.trim() !== currentPost.biasSummary.trim();
+  diffBiasSummary.innerHTML = buildDiffHtml(currentPost.biasSummary, editBiasSummary.value);
+  diffBiasSummary.classList.toggle("hidden", !forceShow && !biasChanged);
+
+  const posterChanged = editPosterNote.value.trim() !== currentPost.posterNote.trim();
+  diffPosterNote.innerHTML = buildDiffHtml(currentPost.posterNote, editPosterNote.value);
+  diffPosterNote.classList.toggle("hidden", !forceShow && !posterChanged);
+}
 
 async function init() {
   const res = await fetch("posts.json");
@@ -134,7 +187,7 @@ function openBiasInfo(postId) {
         <div class="source-title">${s.name}</div>
         <div class="source-desc">${s.desc}</div>
       </div>
-      <span class="source-arrow">↗</span>
+      <span class="source-pill">Open ↗</span>
     </a>
   `).join("");
 
@@ -155,11 +208,15 @@ function enterEditMode() {
 }
 
 function setEditState(confirming) {
-  editBiasSummary.disabled = confirming;
-  editPosterNote.disabled = confirming;
+  editBiasSummary.classList.toggle("hidden", confirming);
+  editPosterNote.classList.toggle("hidden", confirming);
+  diffBiasSummary.classList.toggle("confirm-mode", confirming);
+  diffPosterNote.classList.toggle("confirm-mode", confirming);
+  updateDiffPreviews(confirming);
+
   editHeaderTitle.textContent = confirming ? "Confirm Changes" : "Edit Information";
   editConfirmNotice.classList.toggle("hidden", !confirming);
-  finishEditBtn.classList.toggle("hidden", confirming);
+  editActions.classList.toggle("hidden", confirming);
   saveActions.classList.toggle("hidden", !confirming);
 }
 
@@ -169,6 +226,9 @@ function closeDrawer() {
   drawer.setAttribute("aria-hidden", "true");
 }
 
+editBiasSummary.addEventListener("input", () => updateDiffPreviews(false));
+editPosterNote.addEventListener("input", () => updateDiffPreviews(false));
+
 document.getElementById("moreInfoBtn").onclick = () => showScreen(screenSources);
 document.getElementById("backToSummary").onclick = () => showScreen(screenSummary);
 document.getElementById("editBtn").onclick = enterEditMode;
@@ -176,7 +236,7 @@ document.getElementById("cancelEditBtn").onclick = () => {
   drawer.classList.remove("editing");
   showScreen(screenSummary);
 };
-finishEditBtn.onclick = () => setEditState(true);
+document.getElementById("finishEditBtn").onclick = () => setEditState(true);
 document.getElementById("keepEditingBtn").onclick = () => setEditState(false);
 document.getElementById("saveChangesBtn").onclick = () => {
   if (!currentPost) return;

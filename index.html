@@ -10,13 +10,13 @@
   <main id="feed" class="feed"></main>
 
   <div class="nav-btns">
-    <button id="prevBtn" class="nav-btn" aria-label="Previous">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <button id="prevBtn" class="nav-btn" title="Previous post" aria-label="Previous">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="18 15 12 9 6 15"/>
       </svg>
     </button>
-    <button id="nextBtn" class="nav-btn" aria-label="Next">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <button id="nextBtn" class="nav-btn" title="Next post" aria-label="Next">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="6 9 12 15 18 9"/>
       </svg>
     </button>
@@ -43,7 +43,7 @@
 
       <div class="info-footer">
         <div class="footer-row">
-          <button id="editBtn" class="secondary-btn">Edit</button>
+          <button id="editBtn" class="edit-btn">✎ Edit</button>
           <button id="moreInfoBtn" class="primary-btn">Additional Information ›</button>
         </div>
       </div>
@@ -51,7 +51,6 @@
 
     <section id="screenEdit" class="drawer-screen hidden">
       <div class="info-header">
-        <button id="cancelEditBtn" class="back-btn">Cancel</button>
         <h2 id="editHeaderTitle">Edit Information</h2>
         <button class="close-btn" id="closeDrawer3" aria-label="Close">✕</button>
       </div>
@@ -60,20 +59,25 @@
         <div class="info-block edit-block">
           <label for="editBiasSummary">Why this post may be biased</label>
           <textarea id="editBiasSummary" rows="5"></textarea>
+          <div id="diffBiasSummary" class="diff-preview hidden"></div>
         </div>
 
         <div class="info-block edit-block">
           <label for="editPosterNote">About the poster (<span id="editPosterHandle"></span>)</label>
           <textarea id="editPosterNote" rows="4"></textarea>
+          <div id="diffPosterNote" class="diff-preview hidden"></div>
         </div>
 
-        <p id="editConfirmNotice" class="edit-notice hidden">Review your edits above, then tap Save Changes to apply them.</p>
+        <p id="editConfirmNotice" class="edit-notice hidden">Review your highlighted changes above, then click Save Changes to apply them.</p>
       </div>
 
       <div class="info-footer">
-        <button id="finishEditBtn" class="primary-btn">Finish</button>
+        <div id="editActions" class="footer-row">
+          <button id="cancelEditBtn" class="cancel-btn">Cancel</button>
+          <button id="finishEditBtn" class="edit-primary-btn">Finish ›</button>
+        </div>
         <div id="saveActions" class="footer-row hidden">
-          <button id="keepEditingBtn" class="secondary-btn">Keep Editing</button>
+          <button id="keepEditingBtn" class="secondary-btn">‹ Keep Editing</button>
           <button id="saveChangesBtn" class="save-btn-action">Save Changes</button>
         </div>
       </div>
