@@ -21,6 +21,14 @@ function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function getDomain(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 function buildDiffHtml(oldText, newText) {
   const a = oldText.trim().split(/\s+/).filter(Boolean);
   const b = newText.trim().split(/\s+/).filter(Boolean);
@@ -166,10 +174,13 @@ async function init() {
 }
 
 function showScreen(target) {
-  screenSummary.classList.add("hidden");
-  screenEdit.classList.add("hidden");
-  screenSources.classList.add("hidden");
+  [screenSummary, screenEdit, screenSources].forEach((s) => {
+    s.classList.add("hidden");
+    s.classList.remove("screen-animate");
+  });
   target.classList.remove("hidden");
+  void target.offsetWidth;
+  target.classList.add("screen-animate");
 }
 
 function openBiasInfo(postId) {
@@ -183,11 +194,19 @@ function openBiasInfo(postId) {
 
   document.getElementById("sourcesList").innerHTML = post.sources.map((s) => `
     <a class="source-btn" href="${s.url}" target="_blank" rel="noopener noreferrer">
-      <div>
+      <div class="source-info">
         <div class="source-title">${s.name}</div>
         <div class="source-desc">${s.desc}</div>
+        <div class="source-domain">${getDomain(s.url)}</div>
       </div>
-      <span class="source-pill">Open ↗</span>
+      <span class="source-pill">
+        Open
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </span>
     </a>
   `).join("");
 
