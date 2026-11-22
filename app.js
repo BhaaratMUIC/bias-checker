@@ -1,15 +1,20 @@
 const feed = document.getElementById("feed");
+const drawer = document.getElementById("infoDrawer");
+const screenSummary = document.getElementById("screenSummary");
+const screenSources = document.getElementById("screenSources");
+
+let posts = [];
 
 async function init() {
   const res = await fetch("posts.json");
-  const posts = await res.json();
+  posts = await res.json();
 
   feed.innerHTML = posts.map((p) => `
     <div class="slide">
       <div class="player-wrap">
         <section class="video-card" style="background:${p.color}">
           ${p.biased ? `
-            <button class="bias-indicator" title="Potential bias detected" aria-label="Potential bias detected">
+            <button class="bias-indicator" data-id="${p.id}" title="Potential bias detected" aria-label="Potential bias detected">
               <svg class="warn-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/>
@@ -73,17 +78,23 @@ async function init() {
     </div>
   `).join("");
 
-  // Trigger attention animation each time a biased post scrolls into view
+  // Trigger attention animation & keep open drawer synced when scrolling
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       const badge = entry.target.querySelector(".bias-indicator");
-      if (!badge) return;
       if (entry.isIntersecting) {
-        badge.classList.remove("compact");
-        badge.classList.add("attention");
-        clearTimeout(badge._timer);
-        badge._timer = setTimeout(() => badge.classList.add("compact"), 2800);
-      } else {
+        if (badge) {
+          badge.classList.remove("compact");
+          badge.classList.add("attention");
+          clearTimeout(badge._timer);
+          badge._timer = setTimeout(() => badge.classList.add("compact"), 2800);
+          if (document.body.classList.contains("drawer-open")) {
+            openBiasInfo(badge.dataset.id);
+          }
+        } else if (document.body.classList.contains("drawer-open")) {
+          closeDrawer();
+        }
+      } else if (badge) {
         badge.classList.remove("attention", "compact");
       }
     });
@@ -92,10 +103,53 @@ async function init() {
   document.querySelectorAll(".slide").forEach((slide) => observer.observe(slide));
 }
 
+// Open Task 2 side drawer on Screen 1
+function openBiasInfo(postId) {
+  const post = posts.find((p) => p.id === Number(postId));
+  if (!post) return;
+
+  document.getElementById("biasSummaryText").textContent = post.biasSummary;
+  document.getElementById("posterHandle").textContent = post.handle;
+  document.getElementById("posterNoteText").textContent = post.posterNote;
+
+  document.getElementById("sourcesList").innerHTML = post.sources.map((s) => `
+    <a class="source-btn" href="${s.url}" target="_blank" rel="noopener noreferrer">
+      <div>
+        <div class="source-title">${s.name}</div>
+        <div class="source-desc">${s.desc}</div>
+      </div>
+      <span class="source-arrow">↗</span>
+    </a>
+  `).join("");
+
+  screenSummary.classList.remove("hidden");
+  screenSources.classList.add("hidden");
+  document.body.classList.add("drawer-open");
+  drawer.setAttribute("aria-hidden", "false");
+}
+
+function closeDrawer() {
+  document.body.classList.remove("drawer-open");
+  drawer.setAttribute("aria-hidden", "true");
+}
+
+// Drawer screen transitions
+document.getElementById("moreInfoBtn").onclick = () => {
+  screenSummary.classList.add("hidden");
+  screenSources.classList.remove("hidden");
+};
+document.getElementById("backToSummary").onclick = () => {
+  screenSources.classList.add("hidden");
+  screenSummary.classList.remove("hidden");
+};
+document.getElementById("closeDrawer").onclick = closeDrawer;
+document.getElementById("closeDrawer2").onclick = closeDrawer;
+
 // Click handling for bias indicator, pause/play, like, and save
 feed.addEventListener("click", (e) => {
-  if (e.target.closest(".bias-indicator")) {
-    // Hook for bias info panel later
+  const badge = e.target.closest(".bias-indicator");
+  if (badge) {
+    openBiasInfo(badge.dataset.id);
     return;
   }
 
@@ -119,6 +173,7 @@ document.getElementById("prevBtn").onclick = () => scrollPost(-1);
 document.getElementById("nextBtn").onclick = () => scrollPost(1);
 
 document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeDrawer();
   if (e.key === "ArrowUp") { e.preventDefault(); scrollPost(-1); }
   if (e.key === "ArrowDown") { e.preventDefault(); scrollPost(1); }
 });

@@ -7,7 +7,14 @@
     "color": "#1e293b",
     "likes": 14200,
     "comments": 312,
-    "biased": true
+    "biased": true,
+    "biasSummary": "Uses emotionally charged framing and omits non-partisan Congressional Budget Office (CBO) estimates.",
+    "posterNote": "This account frequently posts partisan commentary and has received funding from political action committees.",
+    "sources": [
+      { "name": "CBO Official Tax Bill Summary", "desc": "Non-partisan fiscal breakdown", "url": "https://www.cbo.gov" },
+      { "name": "AP News Fact Check", "desc": "Independent verification of claims", "url": "https://apnews.com" },
+      { "name": "Reuters Policy Overview", "desc": "Balanced coverage of both sides", "url": "https://www.reuters.com" }
+    ]
   },
   {
     "id": 2,
@@ -17,7 +24,13 @@
     "color": "#1f2937",
     "likes": 8350,
     "comments": 128,
-    "biased": true
+    "biased": true,
+    "biasSummary": "Relies heavily on industry-funded projections without citing independent grid cost comparisons.",
+    "posterNote": "Account is affiliated with an energy trade advocacy group.",
+    "sources": [
+      { "name": "U.S. EIA Energy Outlook", "desc": "Official federal energy data", "url": "https://www.eia.gov" },
+      { "name": "MIT Energy Initiative", "desc": "Academic analysis of grid costs", "url": "https://energy.mit.edu" }
+    ]
   },
   {
     "id": 3,
@@ -27,6 +40,9 @@
     "color": "#172554",
     "likes": 21900,
     "comments": 540,
-    "biased": false
+    "biased": false,
+    "biasSummary": "",
+    "posterNote": "",
+    "sources": []
   }
 ]

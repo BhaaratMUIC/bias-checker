@@ -23,6 +23,47 @@
     </button>
   </div>
 
+<!-- Task 2: Side-by-Side Bias Information Drawer -->
+  <aside id="infoDrawer" class="info-drawer" aria-hidden="true">
+    <!-- Screen 1: Bias Summary -->
+    <section id="screenSummary" class="drawer-screen">
+      <div class="info-header">
+        <h2>Bias Information</h2>
+        <button class="close-btn" id="closeDrawer" aria-label="Close">✕</button>
+      </div>
+
+      <div class="info-body">
+        <div class="info-block">
+          <h3>Why this post may be biased</h3>
+          <p id="biasSummaryText"></p>
+        </div>
+
+        <div class="info-block">
+          <h3>About the poster (<span id="posterHandle"></span>)</h3>
+          <p id="posterNoteText"></p>
+        </div>
+      </div>
+
+      <div class="info-footer">
+        <button id="moreInfoBtn" class="primary-btn">Additional Information ›</button>
+      </div>
+    </section>
+
+    <!-- Screen 2: Additional Information & Sources -->
+    <section id="screenSources" class="drawer-screen hidden">
+      <div class="info-header">
+        <button id="backToSummary" class="back-btn">‹ Back</button>
+        <h2>Additional Information</h2>
+        <button class="close-btn" id="closeDrawer2" aria-label="Close">✕</button>
+      </div>
+
+      <div class="info-body">
+        <p class="sources-intro">Explore independent sources and fact-checks on this topic:</p>
+        <div id="sourcesList" class="sources-list"></div>
+      </div>
+    </section>
+  </aside>
+
   <script src="app.js"></script>
 </body>
 </html>
