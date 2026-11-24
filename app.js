@@ -1,8 +1,11 @@
 const feed = document.getElementById("feed");
-const drawer = document.getElementById("infoDrawer");
+const infoDrawer = document.getElementById("infoDrawer");
+const rateDrawer = document.getElementById("rateDrawer");
 const screenSummary = document.getElementById("screenSummary");
 const screenEdit = document.getElementById("screenEdit");
 const screenSources = document.getElementById("screenSources");
+const screenRate = document.getElementById("screenRate");
+const settingsOverlay = document.getElementById("settingsOverlay");
 
 const editBiasSummary = document.getElementById("editBiasSummary");
 const editPosterNote = document.getElementById("editPosterNote");
@@ -14,8 +17,34 @@ const editConfirmNotice = document.getElementById("editConfirmNotice");
 const editActions = document.getElementById("editActions");
 const saveActions = document.getElementById("saveActions");
 
+const rateBiasedBtn = document.getElementById("rateBiasedBtn");
+const rateUnbiasedBtn = document.getElementById("rateUnbiasedBtn");
+const reasonSection = document.getElementById("reasonSection");
+const reasonTags = document.getElementById("reasonTags");
+const evidenceSection = document.getElementById("evidenceSection");
+const rateNoteInput = document.getElementById("rateNoteInput");
+const rateSourceInput = document.getElementById("rateSourceInput");
+const rateFeedback = document.getElementById("rateFeedback");
+const submitRateBtn = document.getElementById("submitRateBtn");
+
+const toggleVerified = document.getElementById("toggleVerified");
+const toggleCitedOnly = document.getElementById("toggleCitedOnly");
+
+const REASONS = {
+  biased: ["Missing Context", "One-Sided Framing", "Unverified Claim", "Emotional Language"],
+  unbiased: ["Cites Credible Sources", "Balanced Perspective", "Factual Overview", "Clear Context"]
+};
+
 let posts = [];
 let currentPost = null;
+let selectedVerdict = null;
+let selectedReason = null;
+
+const settings = {
+  sensitivity: 50,
+  showVerified: true,
+  citedOnly: false
+};
 
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -27,6 +56,63 @@ function getDomain(url) {
   } catch {
     return url;
   }
+}
+
+function getPostStatus(post) {
+  if (post.userVerdict === "unbiased") {
+    return { showBias: false, showVerified: settings.showVerified };
+  }
+  if (post.userVerdict === "biased") {
+    const hasSources = post.sources.length > 0;
+    return { showBias: !settings.citedOnly || hasSources, showVerified: false };
+  }
+  const meetsScore = post.biasScore >= settings.sensitivity;
+  const meetsSourceRule = !settings.citedOnly || post.sources.length > 0;
+  const showBias = meetsScore && meetsSourceRule;
+  const showVerified = !showBias && post.verifiedUnbiased && settings.showVerified;
+  return { showBias, showVerified };
+}
+
+function buildBadgeHtml(post) {
+  const { showBias, showVerified } = getPostStatus(post);
+  if (showBias) {
+    return `
+      <button class="bias-indicator" data-id="${post.id}" title="Potential bias detected" aria-label="Potential bias detected">
+        <svg class="warn-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span class="bias-label">Bias Alert</span>
+        <span class="bias-chevron">›</span>
+      </button>
+    `;
+  }
+  if (showVerified) {
+    return `
+      <button class="verified-indicator" data-id="${post.id}" title="Verified unbiased post" aria-label="Verified unbiased post">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span>Verified Unbiased</span>
+      </button>
+    `;
+  }
+  return "";
+}
+
+function updateAllBadges() {
+  posts.forEach((p) => {
+    const slot = document.querySelector(`.badge-slot[data-id="${p.id}"]`);
+    if (slot) slot.innerHTML = buildBadgeHtml(p);
+
+    const rateBtn = document.querySelector(`.rate-btn[data-id="${p.id}"]`);
+    if (rateBtn) {
+      rateBtn.classList.toggle("rated-biased", p.userVerdict === "biased");
+      rateBtn.classList.toggle("rated-unbiased", p.userVerdict === "unbiased");
+    }
+  });
 }
 
 function buildDiffHtml(oldText, newText) {
@@ -81,20 +167,10 @@ async function init() {
   posts = await res.json();
 
   feed.innerHTML = posts.map((p) => `
-    <div class="slide">
+    <div class="slide" data-id="${p.id}">
       <div class="player-wrap">
         <section class="video-card" style="background:${p.color}">
-          ${p.biased ? `
-            <button class="bias-indicator" data-id="${p.id}" title="Potential bias detected" aria-label="Potential bias detected">
-              <svg class="warn-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <span class="bias-label">Bias Alert</span>
-              <span class="bias-chevron">›</span>
-            </button>
-          ` : ""}
+          <div class="badge-slot" data-id="${p.id}">${buildBadgeHtml(p)}</div>
           <div class="play-status">▶</div>
           <div class="video-meta">
             <div class="handle">${p.handle}</div>
@@ -137,6 +213,16 @@ async function init() {
           </div>
 
           <div class="action-item">
+            <button class="circle-btn rate-btn" data-id="${p.id}" title="Rate post credibility" aria-label="Rate post credibility">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+            </button>
+            <span class="action-count">Rate</span>
+          </div>
+
+          <div class="action-item">
             <button class="circle-btn" aria-label="Share">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
                 <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z"/>
@@ -151,6 +237,7 @@ async function init() {
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
+      const slideId = Number(entry.target.dataset.id);
       const badge = entry.target.querySelector(".bias-indicator");
       if (entry.isIntersecting) {
         if (badge) {
@@ -158,11 +245,15 @@ async function init() {
           badge.classList.add("attention");
           clearTimeout(badge._timer);
           badge._timer = setTimeout(() => badge.classList.add("compact"), 2800);
-          if (document.body.classList.contains("drawer-open")) {
-            openBiasInfo(badge.dataset.id);
+        }
+        if (document.body.classList.contains("rate-open")) {
+          openRateScreen(slideId);
+        } else if (document.body.classList.contains("info-open")) {
+          if (badge) {
+            openBiasInfo(slideId);
+          } else {
+            closeDrawers();
           }
-        } else if (document.body.classList.contains("drawer-open")) {
-          closeDrawer();
         }
       } else if (badge) {
         badge.classList.remove("attention", "compact");
@@ -173,14 +264,26 @@ async function init() {
   document.querySelectorAll(".slide").forEach((slide) => observer.observe(slide));
 }
 
-function showScreen(target) {
+function animateScreen(target) {
+  target.classList.remove("screen-animate");
+  void target.offsetWidth;
+  target.classList.add("screen-animate");
+}
+
+function showInfoScreen(target) {
   [screenSummary, screenEdit, screenSources].forEach((s) => {
     s.classList.add("hidden");
     s.classList.remove("screen-animate");
   });
   target.classList.remove("hidden");
-  void target.offsetWidth;
-  target.classList.add("screen-animate");
+  animateScreen(target);
+}
+
+function closeDrawers() {
+  infoDrawer.classList.remove("editing");
+  document.body.classList.remove("info-open", "rate-open");
+  infoDrawer.setAttribute("aria-hidden", "true");
+  rateDrawer.setAttribute("aria-hidden", "true");
 }
 
 function openBiasInfo(postId) {
@@ -188,32 +291,39 @@ function openBiasInfo(postId) {
   if (!post) return;
   currentPost = post;
 
-  document.getElementById("biasSummaryText").textContent = post.biasSummary;
+  document.getElementById("biasSummaryText").textContent = post.biasSummary || "No bias summary added yet.";
   document.getElementById("posterHandle").textContent = post.handle;
-  document.getElementById("posterNoteText").textContent = post.posterNote;
+  document.getElementById("posterNoteText").textContent = post.posterNote || "No poster background available yet.";
 
-  document.getElementById("sourcesList").innerHTML = post.sources.map((s) => `
-    <a class="source-btn" href="${s.url}" target="_blank" rel="noopener noreferrer">
-      <div class="source-info">
-        <div class="source-title">${s.name}</div>
-        <div class="source-desc">${s.desc}</div>
-        <div class="source-domain">${getDomain(s.url)}</div>
-      </div>
-      <span class="source-pill">
-        Open
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-          <polyline points="15 3 21 3 21 9"/>
-          <line x1="10" y1="14" x2="21" y2="3"/>
-        </svg>
-      </span>
-    </a>
-  `).join("");
+  const sourcesList = document.getElementById("sourcesList");
+  if (post.sources.length) {
+    sourcesList.innerHTML = post.sources.map((s) => `
+      <a class="source-btn" href="${s.url}" target="_blank" rel="noopener noreferrer">
+        <div class="source-info">
+          <div class="source-title">${escapeHtml(s.name)}</div>
+          <div class="source-desc">${escapeHtml(s.desc)}</div>
+          <div class="source-domain">${escapeHtml(getDomain(s.url))}</div>
+        </div>
+        <span class="source-pill">
+          Open
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </span>
+      </a>
+    `).join("");
+  } else {
+    sourcesList.innerHTML = `<p class="sources-intro">No independent sources linked yet. Use the Rate menu to add a supporting source.</p>`;
+  }
 
-  drawer.classList.remove("editing");
-  showScreen(screenSummary);
-  document.body.classList.add("drawer-open");
-  drawer.setAttribute("aria-hidden", "false");
+  infoDrawer.classList.remove("editing");
+  document.body.classList.remove("rate-open");
+  rateDrawer.setAttribute("aria-hidden", "true");
+  showInfoScreen(screenSummary);
+  document.body.classList.add("info-open");
+  infoDrawer.setAttribute("aria-hidden", "false");
 }
 
 function enterEditMode() {
@@ -222,8 +332,8 @@ function enterEditMode() {
   editPosterNote.value = currentPost.posterNote;
   editPosterHandle.textContent = currentPost.handle;
   setEditState(false);
-  drawer.classList.add("editing");
-  showScreen(screenEdit);
+  infoDrawer.classList.add("editing");
+  showInfoScreen(screenEdit);
 }
 
 function setEditState(confirming) {
@@ -239,21 +349,81 @@ function setEditState(confirming) {
   saveActions.classList.toggle("hidden", !confirming);
 }
 
-function closeDrawer() {
-  drawer.classList.remove("editing");
-  document.body.classList.remove("drawer-open");
-  drawer.setAttribute("aria-hidden", "true");
+function renderReasonTags(verdict) {
+  reasonTags.innerHTML = REASONS[verdict].map((tag) => `
+    <button type="button" class="tag-btn${selectedReason === tag ? " selected" : ""}" data-tag="${tag}">${tag}</button>
+  `).join("");
+}
+
+function selectRateVerdict(verdict) {
+  selectedVerdict = verdict;
+  selectedReason = null;
+  rateBiasedBtn.classList.toggle("selected", verdict === "biased");
+  rateUnbiasedBtn.classList.toggle("selected", verdict === "unbiased");
+  reasonSection.classList.remove("hidden");
+  evidenceSection.classList.remove("hidden");
+  renderReasonTags(verdict);
+  submitRateBtn.disabled = false;
+}
+
+function openRateScreen(postId) {
+  const post = posts.find((p) => p.id === Number(postId));
+  if (!post) return;
+  currentPost = post;
+
+  document.getElementById("ratePostMeta").textContent = `Evaluate "${post.title}" by ${post.handle}. Ratings help others identify reliable information.`;
+  selectedVerdict = post.userVerdict || null;
+  selectedReason = post.userReason || null;
+  rateNoteInput.value = "";
+  rateSourceInput.value = "";
+  rateFeedback.classList.add("hidden");
+
+  rateBiasedBtn.classList.toggle("selected", selectedVerdict === "biased");
+  rateUnbiasedBtn.classList.toggle("selected", selectedVerdict === "unbiased");
+
+  if (selectedVerdict) {
+    reasonSection.classList.remove("hidden");
+    evidenceSection.classList.remove("hidden");
+    renderReasonTags(selectedVerdict);
+    submitRateBtn.disabled = false;
+  } else {
+    reasonSection.classList.add("hidden");
+    evidenceSection.classList.add("hidden");
+    submitRateBtn.disabled = true;
+  }
+
+  infoDrawer.classList.remove("editing");
+  document.body.classList.remove("info-open");
+  infoDrawer.setAttribute("aria-hidden", "true");
+  animateScreen(screenRate);
+  document.body.classList.add("rate-open");
+  rateDrawer.setAttribute("aria-hidden", "false");
+}
+
+function openSettingsModal() {
+  const radio = document.querySelector(`input[name="sensitivity"][value="${settings.sensitivity}"]`);
+  if (radio) radio.checked = true;
+  toggleVerified.checked = settings.showVerified;
+  toggleCitedOnly.checked = settings.citedOnly;
+
+  settingsOverlay.classList.remove("hidden");
+  settingsOverlay.setAttribute("aria-hidden", "false");
+}
+
+function closeSettingsModal() {
+  settingsOverlay.classList.add("hidden");
+  settingsOverlay.setAttribute("aria-hidden", "true");
 }
 
 editBiasSummary.addEventListener("input", () => updateDiffPreviews(false));
 editPosterNote.addEventListener("input", () => updateDiffPreviews(false));
 
-document.getElementById("moreInfoBtn").onclick = () => showScreen(screenSources);
-document.getElementById("backToSummary").onclick = () => showScreen(screenSummary);
+document.getElementById("moreInfoBtn").onclick = () => showInfoScreen(screenSources);
+document.getElementById("backToSummary").onclick = () => showInfoScreen(screenSummary);
 document.getElementById("editBtn").onclick = enterEditMode;
 document.getElementById("cancelEditBtn").onclick = () => {
-  drawer.classList.remove("editing");
-  showScreen(screenSummary);
+  infoDrawer.classList.remove("editing");
+  showInfoScreen(screenSummary);
 };
 document.getElementById("finishEditBtn").onclick = () => setEditState(true);
 document.getElementById("keepEditingBtn").onclick = () => setEditState(false);
@@ -264,14 +434,86 @@ document.getElementById("saveChangesBtn").onclick = () => {
   openBiasInfo(currentPost.id);
 };
 
-document.getElementById("closeDrawer").onclick = closeDrawer;
-document.getElementById("closeDrawer2").onclick = closeDrawer;
-document.getElementById("closeDrawer3").onclick = closeDrawer;
+rateBiasedBtn.onclick = () => selectRateVerdict("biased");
+rateUnbiasedBtn.onclick = () => selectRateVerdict("unbiased");
+reasonTags.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tag-btn");
+  if (!btn) return;
+  selectedReason = btn.dataset.tag;
+  renderReasonTags(selectedVerdict);
+});
+
+document.getElementById("cancelRateBtn").onclick = closeDrawers;
+submitRateBtn.onclick = () => {
+  if (!currentPost || !selectedVerdict) return;
+
+  currentPost.userVerdict = selectedVerdict;
+  currentPost.userReason = selectedReason;
+
+  const note = rateNoteInput.value.trim();
+  const sourceUrl = rateSourceInput.value.trim();
+
+  if (selectedVerdict === "biased") {
+    currentPost.verifiedUnbiased = false;
+    if (note) {
+      currentPost.biasSummary = note;
+    } else if (selectedReason && !currentPost.biasSummary) {
+      currentPost.biasSummary = `Community flagged for: ${selectedReason}.`;
+    }
+  } else {
+    currentPost.verifiedUnbiased = true;
+  }
+
+  if (sourceUrl) {
+    currentPost.sources.push({
+      name: "Community Submitted Source",
+      desc: selectedReason ? `Submitted for: ${selectedReason}` : "User-provided reference",
+      url: sourceUrl
+    });
+  }
+
+  updateAllBadges();
+  rateFeedback.textContent = selectedVerdict === "biased"
+    ? "Rating recorded — post marked as potentially biased."
+    : "Rating recorded — post marked as factual and unbiased.";
+  rateFeedback.classList.remove("hidden");
+};
+
+document.getElementById("settingsBtn").onclick = openSettingsModal;
+document.getElementById("closeSettingsBtn").onclick = closeSettingsModal;
+document.getElementById("cancelSettingsBtn").onclick = closeSettingsModal;
+settingsOverlay.onclick = (e) => {
+  if (e.target === settingsOverlay) closeSettingsModal();
+};
+document.getElementById("saveSettingsBtn").onclick = () => {
+  const checked = document.querySelector('input[name="sensitivity"]:checked');
+  if (checked) settings.sensitivity = Number(checked.value);
+  settings.showVerified = toggleVerified.checked;
+  settings.citedOnly = toggleCitedOnly.checked;
+  updateAllBadges();
+  closeSettingsModal();
+};
+
+["closeDrawer", "closeDrawer2", "closeDrawer3", "closeRateDrawer"].forEach((id) => {
+  document.getElementById(id).onclick = closeDrawers;
+});
 
 feed.addEventListener("click", (e) => {
   const badge = e.target.closest(".bias-indicator");
   if (badge) {
     openBiasInfo(badge.dataset.id);
+    return;
+  }
+
+  const verified = e.target.closest(".verified-indicator");
+  if (verified) {
+    openRateScreen(verified.dataset.id);
+    return;
+  }
+
+  const rateBtn = e.target.closest(".rate-btn");
+  if (rateBtn) {
+    openRateScreen(rateBtn.dataset.id);
     return;
   }
 
@@ -294,8 +536,17 @@ document.getElementById("prevBtn").onclick = () => scrollPost(-1);
 document.getElementById("nextBtn").onclick = () => scrollPost(1);
 
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeDrawer();
-  if (document.activeElement && document.activeElement.tagName === "TEXTAREA") return;
+  if (e.key === "Escape") {
+    if (!settingsOverlay.classList.contains("hidden")) {
+      closeSettingsModal();
+    } else {
+      closeDrawers();
+    }
+    return;
+  }
+  if (!settingsOverlay.classList.contains("hidden")) return;
+  const tag = document.activeElement && document.activeElement.tagName;
+  if (tag === "TEXTAREA" || tag === "INPUT") return;
   if (e.key === "ArrowUp") { e.preventDefault(); scrollPost(-1); }
   if (e.key === "ArrowDown") { e.preventDefault(); scrollPost(1); }
 });

@@ -7,7 +7,8 @@
     "color": "#1e293b",
     "likes": 14200,
     "comments": 312,
-    "biased": true,
+    "biasScore": 88,
+    "verifiedUnbiased": false,
     "biasSummary": "Uses emotionally charged framing and omits non-partisan Congressional Budget Office (CBO) estimates.",
     "posterNote": "This account frequently posts partisan commentary and has received funding from political action committees.",
     "sources": [
@@ -24,7 +25,8 @@
     "color": "#1f2937",
     "likes": 8350,
     "comments": 128,
-    "biased": true,
+    "biasScore": 62,
+    "verifiedUnbiased": false,
     "biasSummary": "Relies heavily on industry-funded projections without citing independent grid cost comparisons.",
     "posterNote": "Account is affiliated with an energy trade advocacy group.",
     "sources": [
@@ -40,9 +42,26 @@
     "color": "#172554",
     "likes": 21900,
     "comments": 540,
-    "biased": false,
-    "biasSummary": "",
-    "posterNote": "",
+    "biasScore": 18,
+    "verifiedUnbiased": true,
+    "biasSummary": "Procedural overview explaining Senate rules without partisan framing.",
+    "posterNote": "Educational civics account that cites official government documentation.",
+    "sources": [
+      { "name": "U.S. Senate Rules", "desc": "Official Senate procedure guide", "url": "https://www.senate.gov" }
+    ]
+  },
+  {
+    "id": 4,
+    "handle": "@metro_discourse",
+    "title": "Transit Funding Vote",
+    "desc": "City council is rushing this through before the election. #localpolitics",
+    "color": "#27272a",
+    "likes": 5120,
+    "comments": 94,
+    "biasScore": 55,
+    "verifiedUnbiased": false,
+    "biasSummary": "Speculates on council motives without referencing the published public hearing schedule.",
+    "posterNote": "Local commentary channel with mixed sourcing history.",
     "sources": []
   }
 ]

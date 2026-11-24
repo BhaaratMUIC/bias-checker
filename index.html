@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <button id="settingsBtn" class="settings-btn" title="Alert & Trust Settings" aria-label="Alert and Trust Settings">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    <span>Settings</span>
+  </button>
+
   <main id="feed" class="feed"></main>
 
   <div class="nav-btns">
@@ -22,7 +30,54 @@
     </button>
   </div>
 
-  <aside id="infoDrawer" class="info-drawer" aria-hidden="true">
+  <aside id="rateDrawer" class="side-drawer rate-drawer" aria-hidden="true">
+    <section id="screenRate" class="drawer-screen">
+      <div class="info-header">
+        <h2>Rate Post Credibility</h2>
+        <button class="close-btn" id="closeRateDrawer" aria-label="Close">✕</button>
+      </div>
+
+      <div class="info-body">
+        <p id="ratePostMeta" class="sources-intro"></p>
+
+        <div class="rate-choice-group">
+          <button id="rateBiasedBtn" class="rate-choice biased-choice" type="button">
+            <span class="choice-title">Biased / Misleading</span>
+            <span class="choice-desc">Contains one-sided framing, misleading claims, or omits key context.</span>
+          </button>
+
+          <button id="rateUnbiasedBtn" class="rate-choice unbiased-choice" type="button">
+            <span class="choice-title">Factual / Unbiased</span>
+            <span class="choice-desc">Balanced reporting backed by verifiable facts or neutral explanation.</span>
+          </button>
+        </div>
+
+        <div id="reasonSection" class="info-block hidden">
+          <h3>Select a reason</h3>
+          <div id="reasonTags" class="tag-group"></div>
+        </div>
+
+        <div id="evidenceSection" class="info-block hidden">
+          <label class="field-label" for="rateNoteInput">Add context or explanation (optional)</label>
+          <textarea id="rateNoteInput" class="dark-input" rows="3" placeholder="Briefly explain why you rated this post..."></textarea>
+
+          <label class="field-label" for="rateSourceInput">Supporting source URL (optional)</label>
+          <input id="rateSourceInput" class="dark-input" type="url" placeholder="https://example.org/fact-check" />
+        </div>
+
+        <p id="rateFeedback" class="rate-feedback hidden"></p>
+      </div>
+
+      <div class="info-footer">
+        <div class="footer-row">
+          <button id="cancelRateBtn" class="cancel-btn">Cancel</button>
+          <button id="submitRateBtn" class="save-btn-action" disabled>Submit Rating</button>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <aside id="infoDrawer" class="side-drawer info-drawer" aria-hidden="true">
     <section id="screenSummary" class="drawer-screen">
       <div class="info-header">
         <h2>Bias Information</h2>
@@ -96,6 +151,72 @@
       </div>
     </section>
   </aside>
+
+  <div id="settingsOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" aria-hidden="true">
+    <div class="modal-card">
+      <div class="info-header">
+        <h2 id="settingsTitle">Alert & Trust Settings</h2>
+        <button class="close-btn" id="closeSettingsBtn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="info-body">
+        <div class="info-block">
+          <h3>Bias Alert Sensitivity</h3>
+          <div id="sensitivityOptions" class="radio-group">
+            <label class="radio-card">
+              <input type="radio" name="sensitivity" value="20" />
+              <div>
+                <div class="radio-title">Strict (High Sensitivity)</div>
+                <div class="radio-desc">Flags any partisan framing, opinion, or unverified claim.</div>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="sensitivity" value="50" checked />
+              <div>
+                <div class="radio-title">Balanced (Default)</div>
+                <div class="radio-desc">Flags posts with confirmed bias or missing key context.</div>
+              </div>
+            </label>
+
+            <label class="radio-card">
+              <input type="radio" name="sensitivity" value="80" />
+              <div>
+                <div class="radio-title">Major Only (Low Sensitivity)</div>
+                <div class="radio-desc">Flags only strongly biased or misleading claims.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="info-block">
+          <h3>Verification & Transparency</h3>
+          <label class="toggle-row">
+            <div>
+              <div class="radio-title">Show "Verified Unbiased" badges</div>
+              <div class="radio-desc">Highlight posts verified as factual and balanced.</div>
+            </div>
+            <input type="checkbox" id="toggleVerified" checked />
+          </label>
+
+          <label class="toggle-row">
+            <div>
+              <div class="radio-title">Only show alerts backed by cited sources</div>
+              <div class="radio-desc">Hide warnings that do not yet link to independent references.</div>
+            </div>
+            <input type="checkbox" id="toggleCitedOnly" />
+          </label>
+        </div>
+      </div>
+
+      <div class="info-footer">
+        <div class="footer-row">
+          <button id="cancelSettingsBtn" class="cancel-btn">Cancel</button>
+          <button id="saveSettingsBtn" class="save-btn-action">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
