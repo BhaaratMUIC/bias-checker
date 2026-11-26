@@ -723,3 +723,131 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   flex-shrink: 0;
   cursor: pointer;
 }
+
+@media (max-width: 1120px) {
+  body.info-open .player-wrap,
+  body.rate-open .player-wrap {
+    transform: none;
+  }
+
+  .side-drawer {
+    z-index: 40;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+  }
+
+  .info-drawer {
+    left: auto;
+    right: 16px;
+    transform: translateX(calc(100% + 24px));
+  }
+
+  .rate-drawer {
+    right: auto;
+    left: 16px;
+    transform: translateX(calc(-100% - 24px));
+  }
+}
+
+@media (max-width: 768px) {
+  body,
+  .feed,
+  .slide {
+    height: 100dvh;
+  }
+
+  .nav-btns {
+    display: none;
+  }
+
+  .settings-btn {
+    top: 16px;
+    left: 16px;
+    right: auto;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    background: rgba(24, 24, 27, 0.65);
+    backdrop-filter: blur(6px);
+  }
+  .settings-btn span {
+    display: none;
+  }
+
+  .player-wrap {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    gap: 0;
+  }
+
+  .video-card {
+    width: 100vw;
+    height: 100dvh;
+    max-width: 100vw;
+    aspect-ratio: auto;
+    border-radius: 0;
+    padding: 20px 80px 28px 18px;
+  }
+
+  .actions {
+    position: absolute;
+    right: 12px;
+    bottom: 24px;
+    z-index: 5;
+    gap: 14px;
+    padding-bottom: 0;
+  }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+  }
+
+  .circle-btn {
+    width: 46px;
+    height: 46px;
+    background: rgba(24, 24, 27, 0.55);
+    backdrop-filter: blur(4px);
+  }
+
+  .bias-indicator,
+  .verified-indicator {
+    top: 16px;
+    right: 16px;
+  }
+
+  .side-drawer {
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .info-drawer {
+    left: 0;
+    right: 0;
+    transform: translateX(100%);
+  }
+
+  .rate-drawer {
+    left: 0;
+    right: 0;
+    transform: translateX(-100%);
+  }
+
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-card {
+    max-height: calc(100dvh - 24px);
+  }
+}

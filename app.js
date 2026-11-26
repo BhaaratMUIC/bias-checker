@@ -37,6 +37,7 @@ const REASONS = {
 
 let posts = [];
 let currentPost = null;
+let currentSlideId = null;
 let selectedVerdict = null;
 let selectedReason = null;
 
@@ -240,6 +241,7 @@ async function init() {
       const slideId = Number(entry.target.dataset.id);
       const badge = entry.target.querySelector(".bias-indicator");
       if (entry.isIntersecting) {
+        currentSlideId = slideId;
         if (badge) {
           badge.classList.remove("compact");
           badge.classList.add("attention");
@@ -550,5 +552,48 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowUp") { e.preventDefault(); scrollPost(-1); }
   if (e.key === "ArrowDown") { e.preventDefault(); scrollPost(1); }
 });
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+function onTouchStart(e) {
+  const t = e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+}
+
+function getHorizontalSwipe(e) {
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.4) return null;
+  return dx > 0 ? "right" : "left";
+}
+
+feed.addEventListener("touchstart", onTouchStart, { passive: true });
+feed.addEventListener("touchend", (e) => {
+  if (!settingsOverlay.classList.contains("hidden") || !currentSlideId) return;
+  const dir = getHorizontalSwipe(e);
+  if (!dir) return;
+
+  if (dir === "left") {
+    const activeSlide = feed.querySelector(`.slide[data-id="${currentSlideId}"]`);
+    if (activeSlide && activeSlide.querySelector(".bias-indicator")) {
+      openBiasInfo(currentSlideId);
+    }
+  } else if (dir === "right") {
+    openRateScreen(currentSlideId);
+  }
+}, { passive: true });
+
+infoDrawer.addEventListener("touchstart", onTouchStart, { passive: true });
+infoDrawer.addEventListener("touchend", (e) => {
+  if (getHorizontalSwipe(e) === "right") closeDrawers();
+}, { passive: true });
+
+rateDrawer.addEventListener("touchstart", onTouchStart, { passive: true });
+rateDrawer.addEventListener("touchend", (e) => {
+  if (getHorizontalSwipe(e) === "left") closeDrawers();
+}, { passive: true });
 
 init();
